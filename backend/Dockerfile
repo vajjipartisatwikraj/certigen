@@ -31,5 +31,5 @@ RUN mkdir -p logs
 # Expose backend port
 EXPOSE 5000
 
-# Use PM2 ecosystem file to manage the Node.js process
-CMD ["pm2-runtime", "start", "ecosystem.config.js"]
+# Use PM2 to run server.js directly
+CMD ["pm2-runtime", "start", "server.js", "-i", "2", "--name", "certigen-backend"]

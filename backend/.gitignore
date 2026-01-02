@@ -1,0 +1,10 @@
+node_modules/
+.env
+uploads/
+certificates/
+*.log
+.DS_Store
+
+# OAuth2 tokens (IMPORTANT: Never commit these!)
+config/gmail-token.json
+

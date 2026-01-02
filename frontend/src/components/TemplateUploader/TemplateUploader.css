@@ -1,0 +1,163 @@
+.template-uploader {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: var(--space-lg);
+  min-height: 100vh;
+  background: var(--bg-primary);
+}
+
+.uploader-card {
+  background: #1A2332;
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  border: 1px solid #374151;
+}
+
+.uploader-card h2 {
+  color: #FFFFFF;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 var(--space-sm) 0;
+}
+
+.uploader-description {
+  color: #9CA3AF;
+  margin-bottom: var(--space-lg);
+  font-size: 14px;
+}
+
+.template-name-input {
+  margin-bottom: var(--space-lg);
+}
+
+.template-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: #1F2937;
+  border: 1px solid #4B5563;
+  border-radius: var(--radius-sm);
+  color: #E5E7EB;
+  font-size: 14px;
+  transition: all var(--transition-base);
+  outline: none;
+}
+
+.template-input:focus {
+  border-color: #4F46E5;
+  background: #2D3748;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.template-input::placeholder {
+  color: #6B7280;
+}
+
+.template-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dropzone {
+  border: 2px dashed #4B5563;
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  text-align: center;
+  transition: all var(--transition-base);
+  background-color: #0F1419;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropzone.active {
+  border-color: #4F46E5;
+  background-color: rgba(79, 70, 229, 0.1);
+}
+
+.dropzone-content {
+  width: 100%;
+}
+
+.upload-icon {
+  width: 60px;
+  height: 60px;
+  color: #6B7280;
+  margin-bottom: 15px;
+}
+
+.dropzone-text {
+  font-size: 16px;
+  color: #D1D5DB;
+  margin-bottom: 15px;
+}
+
+.file-input-label {
+  display: inline-block;
+  margin-bottom: 15px;
+  cursor: pointer;
+}
+
+.browse-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  background: #4B5563;
+  color: #FFFFFF;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition-base);
+}
+
+.browse-btn:hover {
+  background: #6B7280;
+}
+
+.file-input {
+  display: none;
+}
+
+.dropzone-hint {
+  font-size: 12px;
+  color: #6B7280;
+}
+
+.preview-container {
+  width: 100%;
+  position: relative;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 400px;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.remove-preview {
+  margin-top: 15px;
+  padding: 8px 16px;
+  background-color: #DC2626;
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  transition: background var(--transition-base);
+}
+
+.remove-preview:hover:not(:disabled) {
+  background-color: #B91C1C;
+}
+
+.remove-preview:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.upload-actions {
+  margin-top: var(--space-lg);
+  display: flex;
+  justify-content: flex-end;
+}

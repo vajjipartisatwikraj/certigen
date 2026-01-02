@@ -1,5 +1,16 @@
 FROM node:18-alpine
 
+# Install build dependencies for canvas and other native modules
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    cairo-dev \
+    jpeg-dev \
+    pango-dev \
+    giflib-dev \
+    pixman-dev
+
 # Install PM2 globally
 RUN npm install -g pm2
 

@@ -201,11 +201,8 @@ const BulkCertificateGenerator = () => {
       formData.append('emailPassword', emailPassword);
       formData.append('emailTemplate', emailTemplate);
 
-      // Get API base URL
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      
-      // Create EventSource connection
-      const url = `${apiUrl}/api/certificates/bulk-generate-stream`;
+      // Use relative URL for production compatibility (goes through Nginx proxy)
+      const url = '/api/certificates/bulk-generate-stream';
       
       // Use fetch to send FormData and get response as stream
       const response = await fetch(url, {

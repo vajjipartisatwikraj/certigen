@@ -8,6 +8,7 @@ import Template from '../models/Template.js';
 import Certificate from '../models/Certificate.js';
 import { generateCertificatePDF, generatePreviewImage } from '../services/pdfService.js';
 import { sendCertificateEmail, sendBulkCertificateEmails, testEmailConfig } from '../services/emailService.js';
+import { uploadToSpaces } from '../services/spacesService.js';
 import upload from '../config/multer.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -324,13 +325,14 @@ router.post('/bulk-generate-stream', upload.fields([
 
       // Generate certificates for all recipients
       const certificatePaths = [];
+      const certificateUrls = [];
       const certificateRecords = [];
 
       for (let i = 0; i < recipients.length; i++) {
         const recipient = recipients[i];
         const certificateId = uuidv4();
         const filename = `certificate-${certificateId}.pdf`;
-        const outputPath = path.join(certificatesDir, filename);
+        const tempPath = path.join(certificatesDir, filename);
 
         const data = {
           recipientName: recipient.name
@@ -345,16 +347,26 @@ router.post('/bulk-generate-stream', upload.fields([
             recipient: recipient.name
           });
 
-          await generateCertificatePDF(template, data, outputPath);
-          certificatePaths.push(outputPath);
+          // Generate PDF to temp location
+          await generateCertificatePDF(template, data, tempPath);
+          
+          // Upload to DigitalOcean Spaces
+          const spacesKey = `certificates/${filename}`;
+          const pdfUrl = await uploadToSpaces(tempPath, spacesKey);
+          
+          // Delete local temp file
+          fs.unlinkSync(tempPath);
+          
+          certificatePaths.push(tempPath); // For email attachment (will be re-downloaded)
+          certificateUrls.push(pdfUrl);
 
-          // Save certificate record
+          // Save certificate record with Spaces URL
           const certificate = new Certificate({
             certificateId,
             templateId: template._id,
             recipientName: recipient.name,
             recipientEmail: recipient.email,
-            pdfPath: outputPath
+            pdfUrl: pdfUrl
           });
 
           await certificate.save();
@@ -372,13 +384,13 @@ router.post('/bulk-generate-stream', upload.fields([
 
       sendSSE({ 
         type: 'info', 
-        message: 'Certificates generated. Starting email delivery...' 
+        message: 'Certificates uploaded to cloud. Starting email delivery...' 
       });
 
-      // Send emails with progress callback
+      // Send emails with Spaces URLs
       const emailResults = await sendBulkCertificateEmails(
         recipients, 
-        certificatePaths,
+        certificateUrls,
         (progress) => {
           sendSSE({
             type: 'progress',
@@ -387,7 +399,7 @@ router.post('/bulk-generate-stream', upload.fields([
         },
         emailUser,
         emailPassword,
-        null // emailTemplate - will be added later when HTML template feature is implemented
+        emailTemplatePath
       );
 
       // Send final summary
@@ -401,6 +413,14 @@ router.post('/bulk-generate-stream', upload.fields([
           emailResults
         }
       });
+
+      // Certificates are stored in DigitalOcean Spaces
+      // They can be accessed via the CDN URLs stored in the database
+
+      // Clean up email template file if it was uploaded
+      if (emailTemplatePath && fs.existsSync(emailTemplatePath)) {
+        fs.unlinkSync(emailTemplatePath);
+      }
 
       // Restore fromName if changed
       if (fromName) {
@@ -673,6 +693,95 @@ router.post('/test-email', async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/certificates/template/:templateId
+ * Get all certificates for a specific template
+ */
+router.get('/template/:templateId', async (req, res) => {
+  try {
+    const { templateId } = req.params;
+    
+    // Find the template by its templateId (UUID string)
+    const template = await Template.findOne({ templateId });
+    
+    if (!template) {
+      return res.status(404).json({
+        success: false,
+        message: 'Template not found'
+      });
+    }
+    
+    // Query certificates using the template's _id (ObjectId)
+    const certificates = await Certificate.find({ templateId: template._id })
+      .sort({ createdAt: -1 })
+      .select('certificateId recipientName recipientEmail pdfUrl createdAt downloadCount');
+
+    res.json({
+      success: true,
+      data: certificates
+    });
+
+  } catch (error) {
+    console.error('Get certificates error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch certificates',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * DELETE /api/certificates/:certificateId
+ * Delete a certificate and its file from Spaces
+ */
+router.delete('/:certificateId', async (req, res) => {
+  try {
+    const { certificateId } = req.params;
+    
+    const certificate = await Certificate.findOne({ certificateId });
+
+    if (!certificate) {
+      return res.status(404).json({
+        success: false,
+        message: 'Certificate not found'
+      });
+    }
+
+    // Extract the key from the URL
+    // URL format: https://certigen-certificates.sfo3.cdn.digitaloceanspaces.com/certificates/certificate-abc123.pdf
+    // Key format: certificates/certificate-abc123.pdf
+    const urlParts = certificate.pdfUrl.split('/');
+    const filename = urlParts[urlParts.length - 1];
+    const spacesKey = `certificates/${filename}`;
+
+    // Delete from DigitalOcean Spaces
+    try {
+      const { deleteFromSpaces } = await import('../services/spacesService.js');
+      await deleteFromSpaces(spacesKey);
+    } catch (spacesError) {
+      console.error('Error deleting from Spaces:', spacesError);
+      // Continue with database deletion even if Spaces deletion fails
+    }
+
+    // Delete from database
+    await Certificate.deleteOne({ certificateId });
+
+    res.json({
+      success: true,
+      message: 'Certificate deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Delete certificate error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete certificate',
+      error: error.message
     });
   }
 });

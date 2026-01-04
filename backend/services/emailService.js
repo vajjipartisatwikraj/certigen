@@ -21,13 +21,29 @@ function createTransporter(emailUser = null, emailPassword = null) {
 
 /**
  * Send certificate email to a recipient using nodemailer
+ * @param {string} recipientEmail 
+ * @param {string} recipientName 
+ * @param {string} pdfUrlOrPath - Either URL (https://...) or local path
+ * @param {string} emailUser 
+ * @param {string} emailPassword 
+ * @param {string} emailTemplate 
  */
-export async function sendCertificateEmail(recipientEmail, recipientName, pdfPath, emailUser = null, emailPassword = null, emailTemplate = null) {
+export async function sendCertificateEmail(recipientEmail, recipientName, pdfUrlOrPath, emailUser = null, emailPassword = null, emailTemplate = null) {
   try {
     const transporter = createTransporter(emailUser, emailPassword);
     
-    const subject = `Your Certificate of Participation - ZENITH '25`;
-    const html = `
+    let html;
+    let subject = `Your Certificate of Participation - ZENITH '25`;
+    
+    // Use uploaded email template if provided
+    if (emailTemplate && fs.existsSync(emailTemplate)) {
+      html = fs.readFileSync(emailTemplate, 'utf-8');
+      // Replace placeholder with recipient name if exists
+      html = html.replace(/\{\{name\}\}/g, recipientName);
+      html = html.replace(/\{\{recipientName\}\}/g, recipientName);
+    } else {
+      // Use default hardcoded template
+      html = `
       <!DOCTYPE html>
       <html>
       <head>
@@ -130,11 +146,15 @@ export async function sendCertificateEmail(recipientEmail, recipientName, pdfPat
         </div>
       </body>
       </html>
-    `;
+      `;
+    }
     
     // Check if banner image exists
     const bannerPath = path.join(process.cwd(), 'email-banner.png');
     const bannerExists = fs.existsSync(bannerPath);
+    
+    // Determine if pdfUrlOrPath is a URL or local path
+    const isUrl = pdfUrlOrPath.startsWith('http://') || pdfUrlOrPath.startsWith('https://');
     
     // Setup email options
     const mailOptions = {
@@ -143,9 +163,13 @@ export async function sendCertificateEmail(recipientEmail, recipientName, pdfPat
       subject: subject,
       html: html,
       attachments: [
-        {
+        isUrl ? {
           filename: `Certificate_${recipientName.replace(/\s+/g, '_')}.pdf`,
-          path: pdfPath,
+          href: pdfUrlOrPath, // URL to download from
+          contentType: 'application/pdf'
+        } : {
+          filename: `Certificate_${recipientName.replace(/\s+/g, '_')}.pdf`,
+          path: pdfUrlOrPath, // Local file path
           contentType: 'application/pdf'
         }
       ]
@@ -177,8 +201,14 @@ export async function sendCertificateEmail(recipientEmail, recipientName, pdfPat
 
 /**
  * Send certificates to multiple recipients
+ * @param {Array} recipients - Array of {name, email}
+ * @param {Array} certificateUrlsOrPaths - Array of URLs or file paths
+ * @param {Function} onProgress - Progress callback
+ * @param {string} emailUser 
+ * @param {string} emailPassword 
+ * @param {string} emailTemplate 
  */
-export async function sendBulkCertificateEmails(recipients, certificatePaths, onProgress = null, emailUser = null, emailPassword = null, emailTemplate = null) {
+export async function sendBulkCertificateEmails(recipients, certificateUrlsOrPaths, onProgress = null, emailUser = null, emailPassword = null, emailTemplate = null) {
   const results = {
     success: [],
     failed: []
@@ -189,7 +219,7 @@ export async function sendBulkCertificateEmails(recipients, certificatePaths, on
 
   for (let i = 0; i < recipients.length; i++) {
     const recipient = recipients[i];
-    const pdfPath = certificatePaths[i];
+    const pdfUrlOrPath = certificateUrlsOrPaths[i];
 
     // Calculate progress metrics
     const currentIndex = i + 1;
@@ -203,7 +233,7 @@ export async function sendBulkCertificateEmails(recipients, certificatePaths, on
       // Notify progress - sending
       if (onProgress) {
         onProgress({
-          type: 'sending',
+          status: 'sending',
           current: currentIndex,
           total: totalRecipients,
           percent: progressPercent,
@@ -221,7 +251,7 @@ export async function sendBulkCertificateEmails(recipients, certificatePaths, on
       const result = await sendCertificateEmail(
         recipient.email,
         recipient.name,
-        pdfPath,
+        pdfUrlOrPath,
         emailUser,
         emailPassword,
         emailTemplate
@@ -237,7 +267,7 @@ export async function sendBulkCertificateEmails(recipients, certificatePaths, on
       // Notify progress - success
       if (onProgress) {
         onProgress({
-          type: 'success',
+          status: 'success',
           current: currentIndex,
           total: totalRecipients,
           percent: progressPercent,
@@ -266,7 +296,7 @@ export async function sendBulkCertificateEmails(recipients, certificatePaths, on
       // Notify progress - failed
       if (onProgress) {
         onProgress({
-          type: 'failed',
+          status: 'failed',
           current: currentIndex,
           total: totalRecipients,
           percent: progressPercent,

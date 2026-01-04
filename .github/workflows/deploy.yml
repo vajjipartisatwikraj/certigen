@@ -69,9 +69,15 @@ jobs:
                   - NODE_ENV=production
                   - PORT=5000
                   - MONGODB_URI=${{ secrets.MONGODB_URI }}
+                  - SPACES_ENDPOINT=${{ secrets.SPACES_ENDPOINT }}
+                  - SPACES_REGION=${{ secrets.SPACES_REGION }}
+                  - SPACES_BUCKET=${{ secrets.SPACES_BUCKET }}
+                  - SPACES_ACCESS_KEY=${{ secrets.SPACES_ACCESS_KEY }}
+                  - SPACES_SECRET_KEY=${{ secrets.SPACES_SECRET_KEY }}
+                  - SPACES_CDN_URL=${{ secrets.SPACES_CDN_URL }}
+                  - ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }}
                 volumes:
                   - ./uploads:/app/uploads
-                  - ./certificates:/app/certificates
                   - ./logs:/app/logs
                 restart: unless-stopped
                 networks:

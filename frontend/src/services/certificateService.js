@@ -88,4 +88,20 @@ export const certificateService = {
     const response = await api.post('/certificates/test-email');
     return response.data;
   },
+
+  /**
+   * Get certificates by template ID
+   */
+  getCertificatesByTemplate: async (templateId) => {
+    const response = await api.get(`/certificates/template/${templateId}`);
+    return response.data;
+  },
+
+  /**
+   * Delete a certificate
+   */
+  deleteCertificate: async (certificateId) => {
+    const response = await api.delete(`/certificates/${certificateId}`);
+    return response.data;
+  },
 };

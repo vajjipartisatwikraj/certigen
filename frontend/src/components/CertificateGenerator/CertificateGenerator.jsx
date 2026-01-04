@@ -14,7 +14,6 @@ const CertificateGenerator = () => {
   const [template, setTemplate] = useState(null);
   const [recipientName, setRecipientName] = useState('');
   const [customFields, setCustomFields] = useState({});
-  const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
 
@@ -45,8 +44,6 @@ const CertificateGenerator = () => {
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load template');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -133,10 +130,6 @@ const CertificateGenerator = () => {
       setGenerating(false);
     }
   };
-
-  if (loading) {
-    return <div className="spinner"></div>;
-  }
 
   if (error && !template) {
     return <div className="error-message">{error}</div>;

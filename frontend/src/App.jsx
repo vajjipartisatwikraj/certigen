@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
+import ManageRecipients from './pages/ManageRecipients';
 import TemplateUploader from './components/TemplateUploader/TemplateUploader';
 import CanvasEditor from './components/CanvasEditor/CanvasEditor';
 import CertificateGenerator from './components/CertificateGenerator/CertificateGenerator';
@@ -19,6 +20,7 @@ function App() {
           <Route path="/editor/:templateId" element={<CanvasEditor />} />
           <Route path="/generate/:templateId" element={<CertificateGenerator />} />
           <Route path="/bulk-generate/:templateId" element={<BulkCertificateGenerator />} />
+          <Route path="/recipients/:templateId" element={<ManageRecipients />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>

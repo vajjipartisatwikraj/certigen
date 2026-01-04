@@ -14,17 +14,13 @@ const ProgressBar = ({
   recentLogs = []
 }) => {
   const progressPercent = total > 0 ? Math.round((current / total) * 100) : 0;
-  const inProgress = current - successful - failed;
+  const inProgress = Math.max(0, current - successful - failed);
 
   const formatTime = (seconds) => {
     if (seconds < 60) return `${seconds}s`;
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}m ${secs}s`;
-  };
-
-  const getStatusIcon = () => {
-    return null;
   };
 
   const getStatusText = () => {
@@ -35,84 +31,70 @@ const ProgressBar = ({
       return 'Process stopped due to error';
     }
     if (status === 'processing' && currentRecipient) {
-      return `Sending to ${currentRecipient.name} (${currentRecipient.email})`;
+      return `Processing: ${currentRecipient.name}`;
     }
     return 'Ready to start';
   };
 
   return (
-    <div className={`progress-bar-container ${status}`}>
-      <div className="progress-header">
-        <div className="progress-title">
-          <span className="status-icon">{getStatusIcon()}</span>
-          <span className="status-text">{getStatusText()}</span>
+    <div className="progress-container">
+      <div className="progress-card">
+        <div className="progress-status">
+          <h3 className="status-title">{getStatusText()}</h3>
         </div>
+
+        <div className="progress-bar-section">
+          <div className="progress-track">
+            <div 
+              className={`progress-fill ${status}`}
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+          <div className="progress-info">
+            <span className="progress-text">{current} / {total}</span>
+          </div>
+        </div>
+
+        <div className="stats-grid">
+          <div className="stat-card stat-success">
+            <div className="stat-number">{successful}</div>
+            <div className="stat-label">SUCCESSFUL</div>
+          </div>
+          
+          <div className="stat-card stat-progress">
+            <div className="stat-number">{inProgress}</div>
+            <div className="stat-label">IN PROGRESS</div>
+          </div>
+          
+          <div className="stat-card stat-failed">
+            <div className="stat-number">{failed}</div>
+            <div className="stat-label">FAILED</div>
+          </div>
+        </div>
+
         {status === 'processing' && (
-          <div className="progress-time">
-            <span className="time-elapsed">Elapsed: {formatTime(elapsedTime)}</span>
+          <div className="time-info">
+            <span>Elapsed: {formatTime(elapsedTime)}</span>
             {estimatedTimeRemaining > 0 && (
-              <span className="time-remaining">ETA: {formatTime(estimatedTimeRemaining)}</span>
+              <span>ETA: {formatTime(estimatedTimeRemaining)}</span>
             )}
           </div>
         )}
+
+        {recentLogs.length > 0 && (
+          <div className="activity-section">
+            <h4 className="activity-title">Recent Activity</h4>
+            <div className="activity-list">
+              {recentLogs.map((log, index) => (
+                <div key={index} className={`activity-item activity-${log.type}`}>
+                  <span className="activity-time">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                  <span className="activity-message">{log.message}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
-
-      <div className="progress-bar-wrapper">
-        <div className="progress-bar-track">
-          <div 
-            className="progress-bar-fill"
-            style={{ width: `${progressPercent}%` }}
-          >
-            <span className="progress-percent">{progressPercent}%</span>
-          </div>
-        </div>
-        <div className="progress-count">
-          {current} / {total}
-        </div>
-      </div>
-
-      <div className="progress-stats">
-        <div className="stat-item success">
-          <div className="stat-info">
-            <div className="stat-value">{successful}</div>
-            <div className="stat-label">Successful</div>
-          </div>
-        </div>
-
-        <div className="stat-item in-progress">
-          <div className="stat-info">
-            <div className="stat-value">{inProgress}</div>
-            <div className="stat-label">In Progress</div>
-          </div>
-        </div>
-
-        <div className="stat-item failed">
-          <div className="stat-info">
-            <div className="stat-value">{failed}</div>
-            <div className="stat-label">Failed</div>
-          </div>
-        </div>
-      </div>
-
-      {errorMessage && (
-        <div className="error-banner">
-          <span className="error-text">{errorMessage}</span>
-        </div>
-      )}
-
-      {recentLogs.length > 0 && (
-        <div className="progress-logs">
-          <div className="logs-header">Recent Activity</div>
-          <div className="logs-container">
-            {recentLogs.map((log, index) => (
-              <div key={index} className={`log-entry ${log.type}`}>
-                <span className="log-time">{new Date(log.timestamp).toLocaleTimeString()}</span>
-                <span className="log-message">{log.message}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

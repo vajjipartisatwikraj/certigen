@@ -14,7 +14,6 @@ const CanvasEditor = () => {
   const [template, setTemplate] = useState(null);
   const [textFields, setTextFields] = useState([]);
   const [selectedField, setSelectedField] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 0, height: 0 });
@@ -34,8 +33,6 @@ const CanvasEditor = () => {
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load template');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -56,6 +53,7 @@ const CanvasEditor = () => {
     const newField = {
       fieldId: `field_${Date.now()}`,
       fieldName: `Field ${textFields.length + 1}`,
+      content: 'Sample Text',
       x: 20,
       y: 20 + (textFields.length * 10),
       width: 40,
@@ -110,10 +108,6 @@ const CanvasEditor = () => {
   const goToGenerate = () => {
     navigate(`/generate/${templateId}`);
   };
-
-  if (loading) {
-    return <div className="spinner"></div>;
-  }
 
   if (error && !template) {
     return <div className="error-message">{error}</div>;
@@ -212,6 +206,18 @@ const CanvasEditor = () => {
                       onClick={() => setSelectedField(field.fieldId)}
                     >
                       <div className="field-label">{field.fieldName}</div>
+                      <div 
+                        className="field-content"
+                        style={{
+                          fontSize: `${field.fontSize * (canvasDimensions.width / template.dimensions.width)}px`,
+                          fontFamily: field.fontFamily,
+                          fontWeight: field.fontWeight,
+                          textAlign: field.alignment,
+                          color: field.color,
+                        }}
+                      >
+                        {field.content}
+                      </div>
                       <div className="field-coordinates">
                         ({field.x.toFixed(1)}%, {field.y.toFixed(1)}%)
                       </div>
@@ -232,6 +238,17 @@ const CanvasEditor = () => {
                 value={selectedFieldData.fieldName}
                 onChange={(e) => updateField(selectedField, { fieldName: e.target.value })}
               />
+
+              <div className="form-group">
+                <label className="input-label">Content</label>
+                <textarea
+                  className="input"
+                  value={selectedFieldData.content || ''}
+                  onChange={(e) => updateField(selectedField, { content: e.target.value })}
+                  placeholder="Enter text content..."
+                  rows="3"
+                />
+              </div>
 
               <div className="form-row">
                 <Input

@@ -24,8 +24,9 @@ const certificateSchema = new mongoose.Schema({
   customFields: {
     type: mongoose.Schema.Types.Mixed
   },
-  pdfPath: {
-    type: String
+  pdfUrl: {
+    type: String,
+    required: true
   },
   downloadCount: {
     type: Number,

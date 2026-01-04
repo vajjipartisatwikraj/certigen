@@ -7,7 +7,6 @@ import './Home.css';
 const Home = () => {
   const navigate = useNavigate();
   const [templates, setTemplates] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [stats, setStats] = useState({
     totalTemplates: 0,
@@ -35,8 +34,6 @@ const Home = () => {
       }
     } catch (err) {
       setError('Failed to load templates');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -131,12 +128,7 @@ const Home = () => {
           </div>
         </div>
 
-        {loading ? (
-          <div className="loading-container">
-            <div className="loading-spinner"></div>
-            <p>Loading templates...</p>
-          </div>
-        ) : templates.length === 0 ? (
+        {templates.length === 0 ? (
           <div className="empty-state">
             <h3>No Templates</h3>
             <p>Create your first template to get started</p>
@@ -196,6 +188,13 @@ const Home = () => {
                       onClick={() => navigate(`/bulk-generate/${template.templateId}`)}
                     >
                       Bulk Email
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/recipients/${template.templateId}`)}
+                    >
+                      Manage Recipients
                     </Button>
                   </div>
                   

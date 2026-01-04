@@ -254,6 +254,7 @@ const BulkCertificateGenerator = () => {
                   break;
 
                 case 'progress':
+                  console.log('Progress update:', data);
                   setProgress(prev => ({
                     ...prev,
                     current: data.current,
@@ -539,39 +540,6 @@ const BulkCertificateGenerator = () => {
             errorMessage={progress.errorMessage}
             recentLogs={progress.recentLogs}
           />
-        )}
-
-        {results && (
-          <div className="results-card card">
-            <h3 className="card-title">Generation Results</h3>
-            <div className="results-summary">
-              <div className="stat">
-                <div className="stat-value">{results.totalRecipients}</div>
-                <div className="stat-label">Total Recipients</div>
-              </div>
-              <div className="stat success">
-                <div className="stat-value">{results.successfulEmails}</div>
-                <div className="stat-label">Successful</div>
-              </div>
-              <div className="stat failed">
-                <div className="stat-value">{results.failedEmails}</div>
-                <div className="stat-label">Failed</div>
-              </div>
-            </div>
-
-            {results.emailResults.failed.length > 0 && (
-              <div className="failed-emails">
-                <h4>Failed Emails:</h4>
-                <ul>
-                  {results.emailResults.failed.map((item, index) => (
-                    <li key={index}>
-                      {item.name} ({item.email}): {item.error}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
         )}
 
       </div>
